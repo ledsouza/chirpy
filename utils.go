@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"strings"
 )
 
@@ -20,4 +21,12 @@ func CleanBadWords(body string) string {
 	}
 
 	return strings.Join(cleanedBody, " ")
+}
+
+func ValidateChirp(body string) (string, error) {
+	if len(body) > 140 {
+		return "", errors.New("Chirp is too long")
+	}
+
+	return CleanBadWords(body), nil
 }

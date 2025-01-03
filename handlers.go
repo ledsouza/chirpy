@@ -118,3 +118,23 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 		UserID:    chirp.UserID,
 	})
 }
+
+func (cfg *apiConfig) handlerListChirps(w http.ResponseWriter, r *http.Request) {
+	chirps, err := cfg.db.ListChirps(r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't list chirps", err)
+		return
+	}
+
+	response := make([]Chirp, len(chirps))
+	for i, chirp := range chirps {
+		response[i] = Chirp{
+			ID:        chirp.ID,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+			Body:      chirp.Body,
+			UserID:    chirp.UserID,
+		}
+	}
+	respondWithJSON(w, http.StatusOK, response)
+}

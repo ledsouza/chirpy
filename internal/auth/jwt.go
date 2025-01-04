@@ -1,8 +1,9 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -42,7 +43,6 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 
 func GetBearerToken(headers http.Header) (string, error) {
 	tokenString := headers.Get("Authorization")
-	fmt.Println(len(tokenString))
 
 	if len(tokenString) < 7 || tokenString[:7] != "Bearer " {
 		return "", errors.New("invalid token format")
@@ -53,4 +53,13 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 
 	return tokenString[7:], nil
+}
+
+func MakeRefreshToken() (string, error) {
+	randomBytes := make([]byte, 32)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(randomBytes), nil
 }

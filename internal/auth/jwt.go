@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -42,17 +43,16 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 }
 
 func GetBearerToken(headers http.Header) (string, error) {
-	tokenString := headers.Get("Authorization")
-
-	if len(tokenString) < 7 || tokenString[:7] != "Bearer " {
-		return "", errors.New("invalid token format")
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", ErrNoAuthHeaderIncluded
+	}
+	splitAuth := strings.Split(authHeader, " ")
+	if len(splitAuth) < 2 || splitAuth[0] != "Bearer" {
+		return "", errors.New("malformed authorization header")
 	}
 
-	if len(tokenString) == 7 {
-		return "", errors.New("no token provided")
-	}
-
-	return tokenString[7:], nil
+	return splitAuth[1], nil
 }
 
 func MakeRefreshToken() (string, error) {

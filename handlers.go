@@ -89,6 +89,62 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+	type requestBody struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	type responseBody struct {
+		User
+	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid token", err)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.secretKey)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid token", err)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	reqBody := requestBody{}
+	err = decoder.Decode(&reqBody)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode JSON", err)
+		return
+	}
+
+	hashedPassword, err := auth.HashPassword(reqBody.Password)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password", err)
+		return
+	}
+
+	user, err := cfg.db.UpdateUser(r.Context(), database.UpdateUserParams{
+		Email:          reqBody.Email,
+		HashedPassword: hashedPassword,
+		ID:             userID,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't update the user", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, responseBody{
+		User: User{
+			ID:        user.ID,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+			Email:     user.Email,
+		},
+	})
+}
+
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type requestBody struct {
 		Password string `json:"password"`
@@ -163,7 +219,7 @@ func (cfg *apiConfig) handlerRefreshToken(w http.ResponseWriter, r *http.Request
 
 	refreshTokenString, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Couldn't find refresh token", err)
+		respondWithError(w, http.StatusUnauthorized, "Couldn't find refresh token", err)
 		return
 	}
 

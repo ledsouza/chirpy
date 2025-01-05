@@ -18,6 +18,12 @@ SET
 WHERE id = $3
 RETURNING *;
 
+-- name: UpdateToChirpyRed :one
+UPDATE users
+SET is_chirpy_red = true
+WHERE id = $1
+RETURNING *;
+
 -- name: DeleteUsers :exec
 DELETE FROM users
 RETURNING *;

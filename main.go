@@ -73,6 +73,8 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerGetChirp)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
 
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerUpgradeUser)
+
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: mux,

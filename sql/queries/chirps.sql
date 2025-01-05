@@ -7,7 +7,12 @@ RETURNING *;
 
 -- name: ListChirps :many
 SELECT * FROM chirps
-ORDER BY created_at;
+ORDER BY created_at ASC;
+
+-- name: ListChirpsFromAuthor :many
+SELECT * FROM chirps
+WHERE user_id = $1
+ORDER BY created_at ASC;
 
 -- name: GetChirp :one
 SELECT * FROM chirps
